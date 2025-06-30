@@ -1,74 +1,99 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Jimmy Dev</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jimmy - Nave Espacial 3D</title>
   <style>
-    * {
+    body, html {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
+      overflow: hidden;
+      background: black;
     }
-
-    body {
-      background-color: #0e0e0e;
-      color: #ffffff;
+    canvas {
+      display: block;
+    }
+    #overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
       font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-      padding: 20px;
-    }
-
-    h1 {
-      font-size: 3em;
-      margin-bottom: 0.2em;
-    }
-
-    p {
-      font-size: 1.2em;
-      margin-bottom: 1.5em;
-      color: #cccccc;
-    }
-
-    img {
-      width: 200px;
-      height: auto;
-      border-radius: 20px;
-      box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
-      transition: transform 0.3s ease;
-    }
-
-    img:hover {
-      transform: scale(1.05);
-    }
-
-    .links a {
-      color: #00ffa6;
-      text-decoration: none;
-      margin: 0 10px;
-      font-weight: bold;
-      transition: color 0.3s;
-    }
-
-    .links a:hover {
-      color: #ffffff;
+      z-index: 10;
     }
   </style>
 </head>
 <body>
-  <h1>Olá! Eu sou o Jimmy</h1>
-  <p>Desenvolvedor, entusiasta de tecnologia e fã de dinossauros 🦖</p>
-  <img src="https://i.pinimg.com/originals/bf/c7/eb/bfc7ebfcc2ee9ca4e6576ff6e6957d04.gif" />
-  
-  <div class="links" style="margin-top: 2em;">
-    <a href="https://github.com/seuusuario" target="_blank">GitHub</a>
-    <a href="https://www.linkedin.com/in/seuperfil" target="_blank">LinkedIn</a>
-    <a href="mailto:seuemail@exemplo.com">E-mail</a>
+  <div id="overlay">
+    <h1>Jimmy no Espaço</h1>
+    <p>Gire a nave com o mouse. Prepare-se para a jornada intergaláctica!</p>
   </div>
+  <script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.152.2';
+    import { OrbitControls } from 'https://cdn.skypack.dev/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Estrelas
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 10000;
+    const starVertices = [];
+    for (let i = 0; i < starCount; i++) {
+      const x = (Math.random() - 0.5) * 2000;
+      const y = (Math.random() - 0.5) * 2000;
+      const z = -Math.random() * 2000;
+      starVertices.push(x, y, z);
+    }
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0xffffff });
+    const starField = new THREE.Points(starGeometry, starMaterial);
+    scene.add(starField);
+
+    // Luz
+    const light = new THREE.PointLight(0xffffff, 1);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+
+    // Nave 3D
+    const loader = new GLTFLoader();
+    loader.load('nave_modelo.gltf', function(gltf) {
+      const ship = gltf.scene;
+      ship.scale.set(1.5, 1.5, 1.5);
+      scene.add(ship);
+
+      // Animação
+      function animate() {
+        requestAnimationFrame(animate);
+        ship.rotation.y += 0.001;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }, undefined, function(error) {
+      console.error(error);
+    });
+
+    // Controles
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.5;
+
+    // Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
 </body>
 </html>
